@@ -1,6 +1,6 @@
-class Demo1 extends AdventureScene {
+class Forest extends AdventureScene {
     constructor() {
-        super("demo1", "First Room");
+        super("forest", "The Forest");
     }
 
     onEnter() {
@@ -97,11 +97,42 @@ class Intro extends Phaser.Scene {
         super('intro')
     }
     create() {
-        this.add.text(50,50, "Adventure awaits!").setFontSize(50);
-        this.add.text(50,100, "Click anywhere to begin.").setFontSize(20);
-        this.input.on('pointerdown', () => {
-            this.cameras.main.fade(1000, 0,0,0);
-            this.time.delayedCall(1000, () => this.scene.start('demo1'));
+        let titleText = this.add.text(0, 0, "Adventure Game", {font: "100px Trebuchet MS", color: '#233B2F'});
+        titleText.x = 0.5 * (this.scale.width - titleText.width);
+        titleText.y = 0.5 * (this.scale.height - titleText.height) - 100;
+        titleText.alpha = 0;
+
+        this.time.delayedCall(500, () => this.tweens.add({targets: titleText, alpha: '1', duration: 4000, ease: 'Quart.out'}));
+        this.time.delayedCall(500, () => this.tweens.add({targets: titleText, y: titleText.y + 100, duration: 4000, ease: 'Quart.out'}));
+
+        let subText = this.add.text(0, 0, "Click to begin", {font: "30px Verdana", color: "#404040"});
+        subText.x = 0.5 * (this.scale.width - subText.width);
+        subText.y = 0.5 * (this.scale.height - subText.height) + 200;
+        subText.alpha = 0;
+
+        this.time.delayedCall(1500, () => this.tweens.add({targets: subText, alpha: '1', duration: 1500, ease: 'Cubic.out'}));
+        this.time.delayedCall(1500, () => this.tweens.add({targets: subText, y: subText.y - 50, duration: 1500, ease: 'Cubic.out'}));
+
+        this.time.delayedCall(2000, () => this.input.on('pointerdown', () => {
+            this.cameras.main.fade(800, 0,0,0);
+            this.time.delayedCall(800, () => this.scene.start('wake'));
+        }));
+    }
+}
+
+class Wake extends Phaser.Scene {
+    constructor() {
+        super('wake');
+    }
+    create() {
+        let wakeText = this.add.text(0, 0, "Where am I?", {font: "75px Times New Roman", color: "#665947"});
+        wakeText.alpha = 0;
+        wakeText.x = 0.5 * (this.scale.width - wakeText.width);
+        wakeText.y = 0.5 * (this.scale.height - wakeText.height);
+        this.time.delayedCall(2000, () => this.tweens.add({targets: wakeText, alpha: 1, duration: 200}));
+        this.time.delayedCall(3200, () => {
+            this.cameras.main.fade(100, 0,0,0);
+            this.time.delayedCall(100, () => this.scene.start('forest'));
         });
     }
 }
@@ -125,7 +156,7 @@ const game = new Phaser.Game({
         width: 1920,
         height: 1080
     },
-    scene: [Intro, Demo1, Demo2, Outro],
+    scene: [Intro, Wake, Forest, Demo2, Outro],
     title: "Adventure Game",
 });
 
