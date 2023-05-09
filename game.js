@@ -1,94 +1,100 @@
 class Forest extends AdventureScene {
     constructor() {
-        super("forest", "The Forest");
+        super("forest", "The Forest", "#041900");
     }
 
     onEnter() {
 
-        let clip = this.add.text(this.w * 0.3, this.w * 0.3, "📎 paperclip")
-            .setFontSize(this.s * 2)
+        this.add.text(this.w * 0.375, this.h * 0.1, "Dirt Path")
+            .setStyle({font: `${this.s*2.5}px Trebuchet MS`, color: `#7F5F3F`})
             .setInteractive()
-            .on('pointerover', () => this.showMessage("Metal, bent."))
+            .setOrigin(0.5, 0)
+            .on('pointerover', () => this.showMessage("A path breaking up the monotony of the forest. See where it goes?"))
             .on('pointerdown', () => {
-                this.showMessage("No touching!");
-                this.tweens.add({
-                    targets: clip,
-                    x: '+=' + this.s,
-                    repeat: 2,
-                    yoyo: true,
-                    ease: 'Sine.inOut',
-                    duration: 100
-                });
+                this.showMessage("You head down the path...");
+                this.gotoScene('gate', 800);
             });
 
-        let key = this.add.text(this.w * 0.5, this.w * 0.1, "🔑 key")
-            .setFontSize(this.s * 2)
+        this.add.text(this.w * 0.375, this.h * 0.9, "Tall Grass")
+            .setStyle({font: `${this.s*2.5}px Trebuchet MS`, color: `#4C995F`})
             .setInteractive()
+            .setOrigin(0.5, 1)
+            .on('pointerover', () => this.showMessage("Part of your view is being obscured. Go deeper into the forest?"))
+            .on('pointerdown', () => {
+                this.showMessage("You disappear into the grass…");
+                this.gotoScene('deepforest', 800);
+            });
+
+        let c_terminal = this.add.text(this.h * 0.1, this.h * 0.6, "Computer Terminal")
+            .setStyle({font: `${this.s*2}px Trebuchet MS`, color: `#592C2C`})
+            .setInteractive()
+            .setOrigin(0, 0.5)
             .on('pointerover', () => {
-                this.showMessage("It's a nice key.")
+                if (this.flags[0] == 1) {this.showMessage("The screen is flickering.")}
+                else {this.showMessage("The screen is black.")};
             })
             .on('pointerdown', () => {
-                this.showMessage("You pick up the key.");
-                this.gainItem('key');
-                this.tweens.add({
-                    targets: key,
-                    y: `-=${2 * this.s}`,
-                    alpha: { from: 1, to: 0 },
-                    duration: 500,
-                    onComplete: () => key.destroy()
-                });
-            })
-
-        let door = this.add.text(this.w * 0.1, this.w * 0.15, "🚪 locked door")
-            .setFontSize(this.s * 2)
-            .setInteractive()
-            .on('pointerover', () => {
-                if (this.hasItem("key")) {
-                    this.showMessage("You've got the key for this door.");
-                } else {
-                    this.showMessage("It's locked. Can you find a key?");
-                }
-            })
-            .on('pointerdown', () => {
-                if (this.hasItem("key")) {
-                    this.loseItem("key");
-                    this.showMessage("*squeak*");
-                    door.setText("🚪 unlocked door");
-                    this.gotoScene('demo2');
-                }
-            })
-
+                if (this.flags[0] == 1) {this.gotoScene('terminal', 2500)}
+                else {
+                    this.showMessage("It seems to be broken.");
+                    this.shakeObject(c_terminal);
+                };
+            });
     }
 }
 
-class Demo2 extends AdventureScene {
+class Gate extends AdventureScene {
     constructor() {
-        super("demo2", "The second room has a long name (it truly does).");
+        super("gate", "The Gate", "#333");
     }
     onEnter() {
-        this.add.text(this.w * 0.3, this.w * 0.4, "just go back")
-            .setFontSize(this.s * 2)
+        this.add.text(this.w * 0.375, this.h * 0.9, "Go Back")
+            .setStyle({font: `${this.s*2.5}px Trebuchet MS`, color: `#496644`})
             .setInteractive()
+            .setOrigin(0.5, 1)
             .on('pointerover', () => {
-                this.showMessage("You've got no other choice, really.");
+                this.showMessage("Go Back?");
             })
             .on('pointerdown', () => {
-                this.gotoScene('demo1');
+                this.showMessage("You head back...");
+                this.gotoScene('forest', 800);
             });
 
-        let finish = this.add.text(this.w * 0.6, this.w * 0.2, '(finish the game)')
-            .setInteractive()
-            .on('pointerover', () => {
-                this.showMessage('*giggles*');
-                this.tweens.add({
-                    targets: finish,
-                    x: this.s + (this.h - 2 * this.s) * Math.random(),
-                    y: this.s + (this.h - 2 * this.s) * Math.random(),
-                    ease: 'Sine.inOut',
-                    duration: 500
+        if (this.flags[1] == 0) {
+            let hatch_key = this.add.text(this.w*0.75 - (this.h*0.1), this.h * 0.4, "Key")
+                .setStyle({font: `${this.s*2}px Trebuchet MS`, color: `#FFD800`})
+                .setInteractive()
+                .setOrigin(1, 0.5)
+                .on('pointerover', () => {
+                    this.showMessage("A key. Pick it up?");
+                })
+                .on('pointerdown', () => {
+                    this.showMessage("You picked up the key.");
+                    this.gainItem('Key');
+                    this.destroyObject(hatch_key);
+                    this.flags[1] = 1;
                 });
+        }
+
+        let steel_gate = this.add.text(this.w * 0.375, this.h * 0.1, "Steel Gate")
+            .setStyle({font: `${this.s*3.25}px Trebuchet MS`})
+            .setInteractive()
+            .setOrigin(0.5, 0)
+            .on('pointerover', () => {
+                if (this.flags[2] == 1) {this.showMessage("Locked. There is a keypad off to the side. Enter a code?")}
+                else if (this.flags[2] == 2) {this.showMessage("See what lies beyond the forest?")}
+                else {this.showMessage("Locked. There is a keypad off to the side, but it seems to be powered off.")};
             })
-            .on('pointerdown', () => this.gotoScene('outro'));
+            .on('pointerdown', () => {
+                if (this.flags[2] == 1) {this.gotoScene('keypad', 1500)}
+                else if (this.flags[2] == 2) {
+                    this.showMessage("You leave the forest...");
+                    this.gotoScene('outro');
+                } else {
+                    this.showMessage("Find a way to turn the power back on.");
+                    this.shakeObject(steel_gate);
+                };
+            });
     }
 }
 
@@ -97,23 +103,26 @@ class Intro extends Phaser.Scene {
         super('intro')
     }
     create() {
-        let titleText = this.add.text(0, 0, "Adventure Game", {font: "100px Trebuchet MS", color: '#233B2F'});
-        titleText.x = 0.5 * (this.scale.width - titleText.width);
-        titleText.y = 0.5 * (this.scale.height - titleText.height) - 100;
+        this.add.text(10, 10, "TESTMODE", {fontSize: 50});
+
+        this.w = this.game.config.width;
+        this.h = this.game.config.height;
+
+        let titleText = this.add.text(this.w*0.5, this.h*0.5 - 100, "Adventure Game", {font: `${0.05 * this.w}px Trebuchet MS`, color: '#233B2F'})
+            .setOrigin(0.5, 0.5);
         titleText.alpha = 0;
 
         this.time.delayedCall(500, () => this.tweens.add({targets: titleText, alpha: '1', duration: 4000, ease: 'Quart.out'}));
         this.time.delayedCall(500, () => this.tweens.add({targets: titleText, y: titleText.y + 100, duration: 4000, ease: 'Quart.out'}));
 
-        let subText = this.add.text(0, 0, "Click to begin", {font: "30px Verdana", color: "#404040"});
-        subText.x = 0.5 * (this.scale.width - subText.width);
-        subText.y = 0.5 * (this.scale.height - subText.height) + 200;
+        let subText = this.add.text(this.w*0.5, this.h * 0.7, "Click to begin", {font: `${0.02 * this.w}px Verdana`, color: "#404040"})
+            .setOrigin(0.5, 0.5);
         subText.alpha = 0;
 
         this.time.delayedCall(1500, () => this.tweens.add({targets: subText, alpha: '1', duration: 1500, ease: 'Cubic.out'}));
-        this.time.delayedCall(1500, () => this.tweens.add({targets: subText, y: subText.y - 50, duration: 1500, ease: 'Cubic.out'}));
+        this.time.delayedCall(1500, () => this.tweens.add({targets: subText, y: '-=' + 0.1*this.h, duration: 1500, ease: 'Cubic.out'}));
 
-        this.time.delayedCall(2000, () => this.input.on('pointerdown', () => {
+        this.time.delayedCall(2, () => this.input.on('pointerdown', () => {
             this.cameras.main.fade(800, 0,0,0);
             this.time.delayedCall(800, () => this.scene.start('wake'));
         }));
@@ -125,15 +134,16 @@ class Wake extends Phaser.Scene {
         super('wake');
     }
     create() {
-        let wakeText = this.add.text(0, 0, "Where am I?", {font: "75px Times New Roman", color: "#665947"});
+        this.w = this.game.config.width;
+        this.h = this.game.config.height;
+
+        let wakeText = this.add.text(this.w*0.5, this.h*0.5, "Where am I?", {font: `${0.03 * this.w}px Times New Roman`, color: "#665947"})
+            .setOrigin(0.5,0.5);
         wakeText.alpha = 0;
-        wakeText.x = 0.5 * (this.scale.width - wakeText.width);
-        wakeText.y = 0.5 * (this.scale.height - wakeText.height);
-        this.time.delayedCall(2000, () => this.tweens.add({targets: wakeText, alpha: 1, duration: 200}));
-        this.time.delayedCall(3200, () => {
-            this.cameras.main.fade(100, 0,0,0);
-            this.time.delayedCall(100, () => this.scene.start('forest'));
-        });
+        this.time.delayedCall(2000, () => this.tweens.add({targets: wakeText, alpha: 1, duration: 300}));
+        this.time.delayedCall(3000, () => this.tweens.add({targets: wakeText, alpha: 0, duration: 3000, ease: "Quart.In"}));
+        this.time.delayedCall(4000, () => this.tweens.add({targets: wakeText, y: this.h, duration: 2000, ease: "Quint.In"}));
+        this.time.delayedCall(6000, () => this.scene.start('forest'));
     }
 }
 
@@ -156,7 +166,7 @@ const game = new Phaser.Game({
         width: 1920,
         height: 1080
     },
-    scene: [Intro, Wake, Forest, Demo2, Outro],
+    scene: [Intro, Wake, Forest, Gate, Outro],
     title: "Adventure Game",
 });
 

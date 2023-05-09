@@ -2,35 +2,38 @@ class AdventureScene extends Phaser.Scene {
 
     init(data) {
         this.inventory = data.inventory || [];
+        this.flags = data.flags || [0,0,0,0,0,0];
+        this.fade_time = data.fadeTime || 500;
     }
 
-    constructor(key, name) {
+    constructor(key, name, bgcol) {
         super(key);
         this.name = name;
+        this.bgcol = bgcol;
+        this.last_msg = [];
     }
 
     create() {
-        this.transitionDuration = 1000;
-
         this.w = this.game.config.width;
         this.h = this.game.config.height;
         this.s = this.game.config.width * 0.01;
 
-        this.cameras.main.setBackgroundColor('#444');
-        this.cameras.main.fadeIn(this.transitionDuration, 0, 0, 0);
+        this.cameras.main.setBackgroundColor(this.bgcol);
+        this.cameras.main.fadeIn(this.fade_time, 0, 0, 0);
 
         this.add.rectangle(this.w * 0.75, 0, this.w * 0.25, this.h).setOrigin(0, 0).setFillStyle(0);
-        this.add.text(this.w * 0.75 + this.s, this.s)
+        this.add.text(this.w * 0.875, this.s)
             .setText(this.name)
-            .setStyle({ fontSize: `${3 * this.s}px` })
+            .setOrigin(0.5, 0)
+            .setStyle({ font: `${4 * this.s}px Times New Roman` })
             .setWordWrapWidth(this.w * 0.25 - 2 * this.s);
         
         this.messageBox = this.add.text(this.w * 0.75 + this.s, this.h * 0.33)
-            .setStyle({ fontSize: `${2 * this.s}px`, color: '#eea' })
+            .setStyle({ font: `${2 * this.s}px Verdana` })
             .setWordWrapWidth(this.w * 0.25 - 2 * this.s);
 
         this.inventoryBanner = this.add.text(this.w * 0.75 + this.s, this.h * 0.66)
-            .setStyle({ fontSize: `${2 * this.s}px` })
+            .setStyle({ font: `${2 * this.s}px Verdana` })
             .setText("Inventory")
             .setAlpha(0);
 
@@ -54,13 +57,18 @@ class AdventureScene extends Phaser.Scene {
     }
 
     showMessage(message) {
+        if (this.last_msg.length > 0) {this.last_msg[0].destroy()};
         this.messageBox.setText(message);
-        this.tweens.add({
-            targets: this.messageBox,
-            alpha: { from: 1, to: 0 },
-            easing: 'Quintic.in',
-            duration: 4 * this.transitionDuration
+        this.tweens.add({targets: this.messageBox, alpha: 2, duration: 500, ease: "Elastic.out"});
+        let fade_event = this.time.delayedCall(2000, () => {
+            this.tweens.add({
+                targets: this.messageBox,
+                alpha: { from: 1, to: 0 },
+                easing: 'Linear',
+                duration: 500
+            });
         });
+        this.last_msg[0] = fade_event;
     }
 
     updateInventory() {
@@ -68,13 +76,13 @@ class AdventureScene extends Phaser.Scene {
             this.tweens.add({
                 targets: this.inventoryBanner,
                 alpha: 1,
-                duration: this.transitionDuration
+                duration: 750
             });
         } else {
             this.tweens.add({
                 targets: this.inventoryBanner,
                 alpha: 0,
-                duration: this.transitionDuration
+                duration: 750
             });
         }
         if (this.inventoryTexts) {
@@ -84,7 +92,7 @@ class AdventureScene extends Phaser.Scene {
         let h = this.h * 0.66 + 3 * this.s;
         this.inventory.forEach((e, i) => {
             let text = this.add.text(this.w * 0.75 + 2 * this.s, h, e)
-                .setStyle({ fontSize: `${1.5 * this.s}px` })
+                .setStyle({ font: `${1.5 * this.s}px Trebuchet MS`, color: `#808080` })
                 .setWordWrapWidth(this.w * 0.75 + 4 * this.s);
             h += text.height + this.s;
             this.inventoryTexts.push(text);
@@ -106,10 +114,10 @@ class AdventureScene extends Phaser.Scene {
             if (text.text == item) {
                 this.tweens.add({
                     targets: text,
-                    x: { from: text.x - 20, to: text.x },
+                    y: { from: text.y + 120, to: text.y },
                     alpha: { from: 0, to: 1 },
-                    ease: 'Cubic.out',
-                    duration: this.transitionDuration
+                    ease: 'Quart.out',
+                    duration: 1000
                 });
             }
         }
@@ -124,10 +132,10 @@ class AdventureScene extends Phaser.Scene {
             if (text.text == item) {
                 this.tweens.add({
                     targets: text,
-                    x: { from: text.x, to: text.x + 20 },
+                    x: { from: text.x, to: text.x + 50 },
                     alpha: { from: 1, to: 0 },
-                    ease: 'Cubic.in',
-                    duration: this.transitionDuration
+                    ease: 'Quartic.in',
+                    duration: 500
                 });
             }
         }
@@ -137,11 +145,40 @@ class AdventureScene extends Phaser.Scene {
         });
     }
 
-    gotoScene(key) {
-        this.cameras.main.fade(this.transitionDuration, 0, 0, 0);
-        this.time.delayedCall(this.transitionDuration, () => {
-            this.scene.start(key, { inventory: this.inventory });
+    gotoScene(key, fade) {
+        this.cameras.main.fade(fade, 0, 0, 0);
+        this.time.delayedCall(fade, () => {
+            this.scene.start(key, { inventory: this.inventory, flags: this.flags, fadeTime: fade });
         });
+    }
+
+    shakeObject(target_obj, repeat_amount = 5) {
+        this.tweens.add({
+            targets: target_obj,
+            x: '+=' + this.s * 0.3,
+            duration: 20,
+            ease: "Sine.InOut",
+            yoyo: true,
+            repeat: repeat_amount
+        });
+        this.time.delayedCall(30, () => this.tweens.add({
+            targets: target_obj,
+            y: '+=' + this.s * 0.3,
+            duration: 20,
+            ease: "Sine.InOut",
+            yoyo: true,
+            repeat: repeat_amount
+        }));
+    }
+
+    destroyObject(target_obj) {
+        this.shakeObject(target_obj, 1);
+        this.time.delayedCall(500, () => this.tweens.add({
+            targets: target_obj,
+            alpha: { from: 1, to: 0},
+            duration: 200,
+            onComplete: () => target_obj.destroy();
+        }));
     }
 
     onEnter() {
