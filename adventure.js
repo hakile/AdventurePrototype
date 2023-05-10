@@ -2,14 +2,16 @@ class AdventureScene extends Phaser.Scene {
 
     init(data) {
         this.inventory = data.inventory || [];
-        this.flags = data.flags || [0,0,0,0,0,0];
-        this.fade_time = data.fadeTime || 500;
+        this.flags = data.flags || [0,0,0,0];
+        this.fade_time = data.fadeTime || 3750;
+        // this.fade_time = 0;
     }
 
-    constructor(key, name, bgcol) {
+    constructor(key, name = "", bgcol = "#000", hud_enabled = true) {
         super(key);
         this.name = name;
         this.bgcol = bgcol;
+        this.hud_enabled = hud_enabled;
         this.last_msg = [];
     }
 
@@ -20,13 +22,16 @@ class AdventureScene extends Phaser.Scene {
 
         this.cameras.main.setBackgroundColor(this.bgcol);
         this.cameras.main.fadeIn(this.fade_time, 0, 0, 0);
+        // console.log(this.flags);
 
-        this.add.rectangle(this.w * 0.75, 0, this.w * 0.25, this.h).setOrigin(0, 0).setFillStyle(0);
-        this.add.text(this.w * 0.875, this.s)
-            .setText(this.name)
-            .setOrigin(0.5, 0)
-            .setStyle({ font: `${4 * this.s}px Times New Roman` })
-            .setWordWrapWidth(this.w * 0.25 - 2 * this.s);
+        if (this.hud_enabled) {
+            this.add.rectangle(this.w * 0.75, 0, this.w * 0.25, this.h).setOrigin(0, 0).setFillStyle(0);
+            this.add.text(this.w * 0.875, this.s)
+                .setText(this.name)
+                .setOrigin(0.5, 0)
+                .setStyle({ font: `${4 * this.s}px Times New Roman` })
+                .setWordWrapWidth(this.w * 0.25 - 2 * this.s);
+        }        
         
         this.messageBox = this.add.text(this.w * 0.75 + this.s, this.h * 0.33)
             .setStyle({ font: `${2 * this.s}px Verdana` })
@@ -36,6 +41,11 @@ class AdventureScene extends Phaser.Scene {
             .setStyle({ font: `${2 * this.s}px Verdana` })
             .setText("Inventory")
             .setAlpha(0);
+        
+        if (!this.hud_enabled) {
+            this.messageBox.x = this.w * 2;
+            this.inventoryBanner.x = this.w * 2;
+        }
 
         this.inventoryTexts = [];
         this.updateInventory();
@@ -146,7 +156,8 @@ class AdventureScene extends Phaser.Scene {
     }
 
     gotoScene(key, fade) {
-        this.cameras.main.fade(fade, 0, 0, 0);
+        // fade = 0;
+        this.cameras.main.fade(fade, 0,0,0, true);
         this.time.delayedCall(fade, () => {
             this.scene.start(key, { inventory: this.inventory, flags: this.flags, fadeTime: fade });
         });
@@ -173,11 +184,12 @@ class AdventureScene extends Phaser.Scene {
 
     destroyObject(target_obj) {
         this.shakeObject(target_obj, 1);
-        this.time.delayedCall(500, () => this.tweens.add({
+        target_obj.disableInteractive();
+        this.time.delayedCall(300, () => this.tweens.add({
             targets: target_obj,
             alpha: { from: 1, to: 0},
             duration: 200,
-            onComplete: () => target_obj.destroy();
+            onComplete: () => target_obj.destroy()
         }));
     }
 
